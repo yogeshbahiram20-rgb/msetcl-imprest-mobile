@@ -32,7 +32,7 @@ public class MainActivity extends Activity {
         settings.setAllowFileAccess(true);
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
-        settings.setUserAgentString(settings.getUserAgentString() + " MSETCL-Imprest-Android/1.0");
+        settings.setUserAgentString(settings.getUserAgentString() + " MSETCL-Imprest-Android/1.1");
 
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
@@ -42,11 +42,32 @@ public class MainActivity extends Activity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
+                String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase();
                 String appHost = Uri.parse(BuildConfig.IMPREST_URL).getHost();
-                if (appHost != null && appHost.equalsIgnoreCase(uri.getHost())) {
+                String requestHost = uri.getHost();
+
+                if (("http".equals(scheme) || "https".equals(scheme)) &&
+                        appHost != null && appHost.equalsIgnoreCase(requestHost)) {
                     return false;
                 }
-                startActivity(new Intent(Intent.ACTION_VIEW, uri));
+
+                if (("exps".equals(scheme) || "exp".equals(scheme)) &&
+                        appHost != null && appHost.equalsIgnoreCase(requestHost)) {
+                    Uri fixed = uri.buildUpon().scheme("https").build();
+                    view.loadUrl(fixed.toString());
+                    return true;
+                }
+
+                if ("http".equals(scheme) || "https".equals(scheme)) {
+                    startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                    return true;
+                }
+
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                } catch (Exception ex) {
+                    Toast.makeText(MainActivity.this, "Unsupported link", Toast.LENGTH_SHORT).show();
+                }
                 return true;
             }
         });
@@ -64,7 +85,11 @@ public class MainActivity extends Activity {
                 dm.enqueue(request);
                 Toast.makeText(this, "Download started", Toast.LENGTH_SHORT).show();
             } catch (Exception ex) {
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                } catch (Exception ignored) {
+                    Toast.makeText(this, "Download failed", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
