@@ -1,0 +1,21 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'in.msetcl.imprest'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "in.msetcl.imprest"
+        minSdk 24
+        targetSdk 35
+        versionCode 1
+        versionName "1.0.0"
+        buildConfigField "String", "IMPREST_URL", '"https://rich-heavy-deprecatedsoftware--yogeshbahiram20.replit.app"'
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+}
